@@ -15,12 +15,14 @@ class Server(Messenger):
     def _run(self):
         print(f"Server running, listening connections @ {self.address}")
         self.connection, addr = self._sock.accept()
-        print(f"Connection accepted! from {addr}")
+        print(f"Entering connection from {addr}")
         self.connected = True
         self.connection.settimeout(1)
         while self.connected:
             try:
                 self.message = self.connection.recv(4096)
+                if self.message == b'':
+                    self.connected = False
             except socket.timeout:
                 pass
 

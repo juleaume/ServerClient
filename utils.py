@@ -40,6 +40,10 @@ class Messenger:
 
     @connected.setter
     def connected(self, value):
+        if value:
+            print(f"[{self}] connected")
+        else:
+            print(f"[{self}] disconnected")
         self._connected = value
 
     @property

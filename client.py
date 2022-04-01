@@ -14,9 +14,9 @@ class Client(Messenger):
         if self.address == (None, None):
             print("No address used")
         try:
+            print(f"Trying to connect to {self.address}")
             self.connection.connect(self.address)
             self.connected = True
-            print("connected!")
         except ConnectionRefusedError:
             print("Could not reach host")
 
