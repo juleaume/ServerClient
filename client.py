@@ -1,5 +1,4 @@
 import socket
-import threading
 
 from utils import Messenger
 
@@ -7,30 +6,31 @@ from utils import Messenger
 class Client(Messenger):
     def __init__(self, ip=None, port=None, signal=None):
         super(Client, self).__init__(ip, port, signal)
-        self.sock = socket.socket()
-        self._connected = False
-        self.reading_thread = None
+        self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.connection.settimeout(1)
 
     def connect(self):
         if self.address == (None, None):
-            raise ValueError
-        self.sock.connect(self.address)
-        self._connected = True
-        print("connected!")
-
-    def run(self):
-        self.reading_thread = threading.Thread(target=self._run)
-        self.reading_thread.start()
+            print("No address used")
+        try:
+            self.connection.connect(self.address)
+            self.connected = True
+            print("connected!")
+        except ConnectionRefusedError:
+            print("Could not reach host")
 
     def _run(self):
-        while self._connected:
-            self.message = self.sock.recv(4096)
+        while self.connected:
+            try:
+                self.message = self.connection.recv(4096)
+                if self.message == b'':
+                    self.connected = False
+            except socket.timeout:
+                pass
 
-    def send_message(self, message):
-        try:
-            self.sock.send(message)
-        except ConnectionResetError:
-            print("Connection failed")
+    def __str__(self):
+        return "Client"
 
 
 if __name__ == '__main__':

@@ -73,7 +73,8 @@ class Window(QMainWindow):
         self.server_message.connect(
             lambda: self._update_text(message_box, self.server)
         )
-        message_box.setEnabled(True)
+        message_box.setEnabled(True)  # open text box even if no one is
+        # listening, the sending will fail anyway
 
     def create_client(self, ip, port, message_box):
         self.client = Client(ip, port, self.client_message)
@@ -82,7 +83,8 @@ class Window(QMainWindow):
         )
         self.client.connect()
         self.client.run()
-        message_box.setEnabled(True)
+        message_box.setEnabled(self.client.connected)  # only open the text
+        # box if the client is connected to a server
 
     @staticmethod
     def _update_text(box: QTextEdit, endpoint: Messenger):
@@ -101,7 +103,7 @@ class Window(QMainWindow):
         group_box.setLayout(layout)
         ip_layout = QHBoxLayout()
         ip_label = QLabel("IP")
-        ip_layout.addWidget(ip_label)
+        ip_layout.addWidget(ip_label, 1, Qt.AlignRight)
         if ip_type == QLineEdit:
             ip_selector = QLineEdit("127.0.0.1")
             address_button = QPushButton("Connect")
@@ -110,14 +112,14 @@ class Window(QMainWindow):
             ip_selector.addItems(get_available_hosts())
             address_button = QPushButton("Create")
 
-        ip_layout.addWidget(ip_selector)
+        ip_layout.addWidget(ip_selector, 2, Qt.AlignLeft)
         layout.addLayout(ip_layout)
 
         port_layout = QHBoxLayout()
         port_label = QLabel("Port")
-        port_layout.addWidget(port_label)
+        port_layout.addWidget(port_label, 1, Qt.AlignRight)
         port_selector = QLineEdit("7878")
-        port_layout.addWidget(port_selector)
+        port_layout.addWidget(port_selector, 2, Qt.AlignLeft)
         layout.addLayout(port_layout)
 
         layout.addWidget(address_button)
@@ -127,7 +129,7 @@ class Window(QMainWindow):
         text_box.setEnabled(False)
         text_layout.addWidget(text_box, 2)
         send_button = QPushButton("↲")
-        text_layout.addWidget(send_button, 1)
+        text_layout.addWidget(send_button, 1, Qt.AlignBottom)
 
         def click_and_place():
             send_button.click()
@@ -143,6 +145,15 @@ class Window(QMainWindow):
 
         return ip_selector, port_selector, \
                address_button, text_box, send_button
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        print("closing window")
+        if self.client is not None:
+            self.client.stop()
+            del self.client
+        if self.server is not None:
+            self.server.stop()
+            del self.server
 
 
 if __name__ == '__main__':
