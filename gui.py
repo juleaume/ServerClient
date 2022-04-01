@@ -107,6 +107,7 @@ class Window(QMainWindow):
         if ip_type == QLineEdit:
             ip_selector = QLineEdit("127.0.0.1")
             address_button = QPushButton("Connect")
+            ip_selector.returnPressed.connect(address_button.click)
         else:
             ip_selector = QComboBox()
             ip_selector.addItems(get_available_hosts())
@@ -119,6 +120,7 @@ class Window(QMainWindow):
         port_label = QLabel("Port")
         port_layout.addWidget(port_label, 1, Qt.AlignRight)
         port_selector = QLineEdit("7878")
+        port_selector.returnPressed.connect(address_button.click)
         port_layout.addWidget(port_selector, 2, Qt.AlignLeft)
         layout.addLayout(port_layout)
 
