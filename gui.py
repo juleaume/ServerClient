@@ -1,3 +1,4 @@
+import socket
 import sys
 
 from PyQt5 import QtGui
@@ -53,9 +54,10 @@ class Window(QMainWindow):
         def send_and_place(endpoint: Messenger, message: QLineEdit,
                            dialog: QTextEdit):
             msg = message.text()
-            endpoint.send_message(msg.encode())
+            signed_msg = f"[{socket.gethostname()}] {msg}"
+            endpoint.send_message(signed_msg.encode())
             t = dialog.toPlainText()
-            t = f"{t}>{msg}\n"
+            t = f"{t}{signed_msg}\n"
             dialog.setText(t)
             message.setText('')
 
@@ -88,7 +90,7 @@ class Window(QMainWindow):
     @staticmethod
     def _update_text(box: QTextEdit, endpoint: Messenger):
         t = box.toPlainText()
-        message = f"{t}<{endpoint.message.decode()}\n"
+        message = f"{t}{endpoint.message.decode()}\n"
         box.setText(message)
 
     def _create_box(self, name: str, ip_type=QLineEdit):
