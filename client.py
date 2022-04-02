@@ -8,7 +8,7 @@ class Client(Messenger):
         super(Client, self).__init__(ip, port, signal)
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.connection.settimeout(1)
+        self.connection.settimeout(10)
 
     def connect(self):
         if self.address == (None, None):

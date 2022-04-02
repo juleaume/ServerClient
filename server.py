@@ -10,7 +10,7 @@ class Server(Messenger):
         self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.connection = None
         self._sock.bind(self.address)
-        self._sock.listen(1)
+        self._sock.listen()
 
     def _run(self):
         print(f"Server running, listening connections @ {self.address}")
