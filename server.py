@@ -19,7 +19,7 @@ class Server(Messenger):
         self.connected = True
         self.connection.settimeout(1)
         self.send_message(
-            f"<Welcome to {socket.gethostname()} server>".encode()
+            f"<Welcome to {self.name} server>".encode()
         )
         while self.connected:
             try:
@@ -28,6 +28,9 @@ class Server(Messenger):
                     self.connected = False
             except socket.timeout:
                 pass
+
+    def closing_statement(self):
+        self.send_message(f"<{self.name} has closed the chat>".encode())
 
     def __str__(self):
         return "Server"

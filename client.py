@@ -8,17 +8,19 @@ class Client(Messenger):
         super(Client, self).__init__(ip, port, signal)
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.connection.settimeout(10)
+        self.connection.settimeout(2)
 
     def connect(self):
         if self.address == (None, None):
             print("No address used")
         try:
             print(f"Trying to connect to {self.address}")
+            self.connection.settimeout(10)
             self.connection.connect(self.address)
+            self.connection.settimeout(2)
             self.connected = True
             self.send_message(
-                f"<{socket.gethostname()} has entered the chat>".encode()
+                f"<{self.name} has entered the chat>".encode()
             )
         except (ConnectionRefusedError, socket.timeout):
             print("Could not reach host")
@@ -31,6 +33,10 @@ class Client(Messenger):
                     self.connected = False
             except socket.timeout:
                 pass
+        print(f"{self} stops listening")
+
+    def closing_statement(self):
+        self.send_message(f"<{self.name} has left the chat>".encode())
 
     def __str__(self):
         return "Client"

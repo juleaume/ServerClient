@@ -9,6 +9,7 @@ class Messenger:
         self.signal = signal
         self._connected = False
         self._last_message = b''
+        self._name = socket.gethostname()
         self._fresh = True
         self.reading_thread = None  # type: threading.Thread
         self._connection = None  # type: socket.socket
@@ -20,6 +21,14 @@ class Messenger:
     @address.setter
     def address(self, value):
         self._ip, self._port = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
 
     @property
     def message(self) -> bytes:
@@ -55,12 +64,18 @@ class Messenger:
         self._connection = value
 
     def run(self):
-        self.reading_thread = threading.Thread(target=self._run)
+        self.reading_thread = threading.Thread(
+            target=self._run, name=f"{self}"
+        )
         self.reading_thread.start()
 
     def stop(self):
+        self.closing_statement()
         self.connected = False
         self.reading_thread.join()
+
+    def closing_statement(self):
+        pass
 
     def send_message(self, message: bytes):
         if self.connected:
