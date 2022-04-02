@@ -18,6 +18,9 @@ class Server(Messenger):
         print(f"Entering connection from {addr}")
         self.connected = True
         self.connection.settimeout(1)
+        self.send_message(
+            f"<Welcome to {socket.gethostname()} server>".encode()
+        )
         while self.connected:
             try:
                 self.message = self.connection.recv(4096)

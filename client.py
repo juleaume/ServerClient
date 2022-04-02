@@ -17,7 +17,10 @@ class Client(Messenger):
             print(f"Trying to connect to {self.address}")
             self.connection.connect(self.address)
             self.connected = True
-        except ConnectionRefusedError:
+            self.send_message(
+                f"<{socket.gethostname()} has entered the chat>".encode()
+            )
+        except (ConnectionRefusedError, socket.timeout):
             print("Could not reach host")
 
     def _run(self):
