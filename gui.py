@@ -31,45 +31,82 @@ class Window(QMainWindow):
         self.setWindowTitle("Server Client")
         self.server = None
         self.client = None
+        self.name = ""
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QHBoxLayout()
         self.central_widget.setLayout(self.layout)
 
-        s_ip, s_port, s_button, s_msg, s_send, s_messages = self._create_box(
-            "Server", QComboBox)
-        c_ip, c_port, c_button, c_msg, c_send, c_messages = self._create_box(
-            "Client")
+        user_box = QGroupBox("User")
+        user_layout = QVBoxLayout()
+        user_box.setLayout(user_layout)
+        username_label = QLabel("Username")
+        self.username_entry = QLineEdit()
+        self.username_entry.returnPressed.connect(self.set_username)
+        set_username_button = QPushButton("set username")
+        set_username_button.clicked.connect(self.set_username)
+        # self.username_entry.textChanged.connect(self.set_username)
+        username_layout = QHBoxLayout()
+        username_layout.addWidget(username_label, 1, Qt.AlignTop)
+        username_layout.addWidget(self.username_entry, 1, Qt.AlignTop)
+        username_layout.addWidget(set_username_button, 1, Qt.AlignTop)
+        user_layout.addLayout(username_layout)
 
-        s_button.clicked.connect(
+        self.layout.addWidget(user_box)
+
+        s_ip, s_port, s_create, s_message, s_send_button, s_history = \
+            self._create_box("Server", QComboBox)
+        c_ip, c_port, c_connect, c_message, c_send_button, c_history = \
+            self._create_box("Client")
+
+        s_create.clicked.connect(
             lambda: self.create_server(
-                s_ip.currentText(), int(s_port.text()), s_messages, s_msg)
+                s_ip.currentText(), int(s_port.text()), s_history, s_message)
         )
-        c_button.clicked.connect(
+        c_connect.clicked.connect(
             lambda: self.create_client(
-                c_ip.text(), int(c_port.text()), c_messages, c_msg)
+                c_ip.text(), int(c_port.text()), c_history, c_message)
         )
 
         def send_and_place(endpoint: Messenger, message: QLineEdit,
                            dialog: QTextEdit):
             msg = message.text()
-            signed_msg = f"[{socket.gethostname()}] {msg}"
-            endpoint.send_message(signed_msg.encode())
-            t = dialog.toPlainText()
-            t = f"{t}{signed_msg}\n"
-            dialog.setText(t)
-            message.setText('')
+            if msg:
+                signed_msg = f"[{endpoint.name}] {msg}"
+                endpoint.send_message(signed_msg.encode())
+                t = dialog.toPlainText()
+                t = f"{t}{signed_msg}\n"
+                dialog.setText(t)
+                message.setText('')
 
-        s_send.clicked.connect(
-            lambda: send_and_place(self.server, s_msg, s_messages))
-        c_send.clicked.connect(
-            lambda: send_and_place(self.client, c_msg, c_messages))
+        s_send_button.clicked.connect(
+            lambda: send_and_place(self.server, s_message, s_history))
+        c_send_button.clicked.connect(
+            lambda: send_and_place(self.client, c_message, c_history))
 
         self.show()
 
+    def set_username(self):
+        self.name = self.username_entry.text()
+        print(f"Username set to {self.name}")
+        if self.server is not None:
+            former_name = self.server.name
+            self.server.name = self.name
+            self.server.send_message(
+                f"<{former_name} is now {self.server.name}>".encode()
+            )
+        if self.client is not None:
+            former_name = self.client.name
+            self.client.name = self.name
+            self.client.send_message(
+                f"<{former_name} is now {self.client.name}>".encode()
+            )
+
     def create_server(self, ip, port, messages, text_box):
         self.server = Server(ip, port, self.server_message)
+        if self.name:
+            self.server.name = self.name
         self.server.run()
         self.server_message.connect(
             lambda: self._update_text(messages, self.server)
@@ -79,6 +116,8 @@ class Window(QMainWindow):
 
     def create_client(self, ip, port, messages, text_box):
         self.client = Client(ip, port, self.client_message)
+        if self.name:
+            self.client.name = self.name
         self.client_message.connect(
             lambda: self._update_text(messages, self.client)
         )
