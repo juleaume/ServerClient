@@ -62,7 +62,7 @@ class Messenger:
         self.connected = False
         self.reading_thread.join()
 
-    def send_message(self, message):
+    def send_message(self, message: bytes):
         if self.connected:
             try:
                 self.connection.send(message)
