@@ -5,7 +5,7 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, \
     QGroupBox, QVBoxLayout, QLabel, QLineEdit, QComboBox, QPushButton, \
-    QTextEdit
+    QTextEdit, QCheckBox
 
 from client import Client
 from server import Server
@@ -38,9 +38,21 @@ class Window(QMainWindow):
         self.layout = QHBoxLayout()
         self.central_widget.setLayout(self.layout)
 
-        user_box = QGroupBox("User")
-        user_layout = QVBoxLayout()
-        user_box.setLayout(user_layout)
+        settings_box = QGroupBox("Settings")
+        settings_layout = QVBoxLayout()
+        settings_box.setLayout(settings_layout)
+
+        agnostic_layout = QHBoxLayout()
+        agnostic_label = QLabel("Agnostic")
+        self.agnostic_checkbox = QCheckBox()
+        self.agnostic_checkbox.clicked.connect(
+            lambda: self.set_agnostic(not self.agnostic_checkbox.isChecked())
+
+        )
+        agnostic_layout.addWidget(agnostic_label)
+        agnostic_layout.addWidget(self.agnostic_checkbox, 1, Qt.AlignLeft)
+        settings_layout.addLayout(agnostic_layout)
+
         username_label = QLabel("Username")
         self.username_entry = QLineEdit()
         self.username_entry.returnPressed.connect(self.set_username)
@@ -51,9 +63,9 @@ class Window(QMainWindow):
         username_layout.addWidget(username_label, 1, Qt.AlignTop)
         username_layout.addWidget(self.username_entry, 1, Qt.AlignTop)
         username_layout.addWidget(set_username_button, 1, Qt.AlignTop)
-        user_layout.addLayout(username_layout)
+        settings_layout.addLayout(username_layout)
 
-        self.layout.addWidget(user_box)
+        self.layout.addWidget(settings_box)
 
         s_ip, s_port, s_create, s_message, s_send_button, s_history = \
             self._create_box("Server", QComboBox)
@@ -73,7 +85,10 @@ class Window(QMainWindow):
                            dialog: QTextEdit):
             msg = message.text()
             if msg:
-                signed_msg = f"[{endpoint.name}] {msg}"
+                if not self.agnostic:
+                    signed_msg = f"[{endpoint.name}] {msg}"
+                else:
+                    signed_msg = msg
                 endpoint.send_message(signed_msg.encode())
                 t = dialog.toPlainText()
                 t = f"{t}{signed_msg}\n"
@@ -87,25 +102,37 @@ class Window(QMainWindow):
 
         self.show()
 
-    def set_username(self):
-        self.name = self.username_entry.text()
-        print(f"Username set to {self.name}")
+    @property
+    def agnostic(self):
+        return self.agnostic_checkbox.isChecked()
+
+    def set_agnostic(self, value):
+        self.username_entry.setEnabled(value)
         if self.server is not None:
-            former_name = self.server.name
-            self.server.name = self.name
-            self.server.send_message(
-                f"<{former_name} is now {self.server.name}>".encode()
-            )
+            self.server.agnostic = value
         if self.client is not None:
-            former_name = self.client.name
-            self.client.name = self.name
-            self.client.send_message(
-                f"<{former_name} is now {self.client.name}>".encode()
-            )
+            self.client.agnostic = value
+
+    def set_username(self):
+        if not self.agnostic:
+            self.name = self.username_entry.text()
+            print(f"Username set to {self.name}")
+            if self.server is not None:
+                former_name = self.server.name
+                self.server.name = self.name
+                self.server.send_message(
+                    f"<{former_name} is now {self.server.name}>".encode()
+                )
+            if self.client is not None:
+                former_name = self.client.name
+                self.client.name = self.name
+                self.client.send_message(
+                    f"<{former_name} is now {self.client.name}>".encode()
+                )
 
     def create_server(self, ip, port, messages, text_box):
         self.server = Server(ip, port, self.server_message)
-        if self.name:
+        if self.name and not self.agnostic:
             self.server.name = self.name
         self.server.run()
         self.server_message.connect(
@@ -116,7 +143,7 @@ class Window(QMainWindow):
 
     def create_client(self, ip, port, messages, text_box):
         self.client = Client(ip, port, self.client_message)
-        if self.name:
+        if self.name and not self.agnostic:
             self.client.name = self.name
         self.client_message.connect(
             lambda: self._update_text(messages, self.client)

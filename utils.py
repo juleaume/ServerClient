@@ -10,6 +10,7 @@ class Messenger:
         self._connected = False
         self._last_message = b''
         self._name = socket.gethostname()
+        self.agnostic = True
         self._fresh = True
         self.reading_thread = None  # type: threading.Thread
         self._connection = None  # type: socket.socket
@@ -70,7 +71,8 @@ class Messenger:
         self.reading_thread.start()
 
     def stop(self):
-        self.closing_statement()
+        if not self.agnostic:
+            self.closing_statement()
         self.connected = False
         self.reading_thread.join()
 

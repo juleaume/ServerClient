@@ -19,9 +19,10 @@ class Client(Messenger):
             self.connection.connect(self.address)
             self.connection.settimeout(2)
             self.connected = True
-            self.send_message(
-                f"<{self.name} has entered the chat>".encode()
-            )
+            if not self.agnostic:
+                self.send_message(
+                    f"<{self.name} has entered the chat>".encode()
+                )
         except (ConnectionRefusedError, socket.timeout):
             print("Could not reach host")
 
