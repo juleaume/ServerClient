@@ -1,5 +1,15 @@
 import socket
+import sys
 import threading
+import logging
+
+log = logging.Logger("PASC")
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(
+    logging.Formatter("%(levelname)s: %(thread)s: %(asctime)s: %(message)s")
+)
+log.addHandler(handler)
 
 
 class Messenger:
@@ -36,7 +46,7 @@ class Messenger:
 
     @message.setter
     def message(self, value):
-        print(f"[{self}] Got message: {value}")
+        log.info(f"[{self}] Got message: {value}")
         self._last_message = value
         if self.signal is not None:
             self.signal.emit()
@@ -48,9 +58,9 @@ class Messenger:
     @connected.setter
     def connected(self, value):
         if value:
-            print(f"[{self}] connected")
+            log.info(f"[{self}] connected")
         else:
-            print(f"[{self}] disconnected")
+            log.info(f"[{self}] disconnected")
         self._connected = value
 
     @property
@@ -68,9 +78,9 @@ class Messenger:
     @agnostic.setter
     def agnostic(self, value):
         if value:
-            print(f"[{self}] is now agnostic")
+            log.info(f"[{self}] is now agnostic")
         else:
-            print(f"[{self}] is no longer agnostic")
+            log.info(f"[{self}] is no longer agnostic")
         self._agnostic = value
 
     def run(self):
@@ -93,11 +103,11 @@ class Messenger:
             try:
                 self.connection.send(f"{message}\n".encode())
             except ConnectionResetError:
-                print("Connection failed")
+                log.warning("Connection failed")
             except AttributeError:
-                print("Sending failed, not connected")
+                log.warning("Sending failed, not connected")
         else:
-            print("Not connected")
+            log.warning("Not connected")
 
     def _run(self):
         raise NotImplemented

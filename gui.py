@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, \
 
 from client import Client
 from server import Server
-from utils import get_available_hosts, Messenger
+from utils import get_available_hosts, Messenger, log
 
 
 class TextShow(QTextEdit):
@@ -114,7 +114,7 @@ class Window(QMainWindow):
     def set_username(self):
         if not self.agnostic:
             self.name = self.username_entry.text()
-            print(f"Username set to {self.name}")
+            log.info(f"Username set to {self.name}")
             if self.server is not None:
                 former_name = self.server.name
                 self.server.name = self.name
@@ -207,7 +207,7 @@ class Window(QMainWindow):
                address_button, text_box, send_button, message_box
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-        print("closing window")
+        log.info("closing window")
         if self.client is not None:
             self.client.stop()
             del self.client

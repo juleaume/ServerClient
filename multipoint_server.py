@@ -1,6 +1,6 @@
 import socket
 
-from utils import Messenger
+from utils import Messenger, log
 
 
 class MultipointServer(Messenger):
@@ -17,9 +17,9 @@ class MultipointServer(Messenger):
 
     def start(self):
         while self.connected:
-            print("spawning new listener")
+            log.info("spawning new listener")
             connection, address = self._sock.accept()
-            print(f"new connection from {address}")
+            log.info(f"new connection from {address}")
             connection.settimeout(.5)
             self.connection_pool.append(connection)
             if self.first_connection:
@@ -42,6 +42,9 @@ class MultipointServer(Messenger):
         for connection in self.connection_pool:  # type: socket.socket
             if not connection == sender:
                 connection.send(self.message)
+
+    def __str__(self):
+        return "Multipoint Server"
 
 
 if __name__ == '__main__':

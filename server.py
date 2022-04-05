@@ -1,6 +1,6 @@
 import socket
 
-from utils import Messenger
+from utils import Messenger, log
 
 
 class Server(Messenger):
@@ -13,9 +13,9 @@ class Server(Messenger):
         self._sock.listen()
 
     def _run(self):
-        print(f"Server running, listening connections @ {self.address}")
+        log.info(f"Server running, listening connections @ {self.address}")
         self.connection, addr = self._sock.accept()
-        print(f"Entering connection from {addr}")
+        log.info(f"Entering connection from {addr}")
         self.connected = True
         self.connection.settimeout(1)
         if not self.agnostic:

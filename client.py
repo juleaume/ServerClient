@@ -1,6 +1,6 @@
 import socket
 
-from utils import Messenger
+from utils import Messenger, log
 
 
 class Client(Messenger):
@@ -12,9 +12,9 @@ class Client(Messenger):
 
     def connect(self):
         if self.address == (None, None):
-            print("No address used")
+            log.error("No address used")
         try:
-            print(f"Trying to connect to {self.address}")
+            log.info(f"Trying to connect to {self.address}")
             self.connection.settimeout(10)
             self.connection.connect(self.address)
             self.connection.settimeout(2)
@@ -24,7 +24,7 @@ class Client(Messenger):
                     f"<{self.name} has entered the chat>"
                 )
         except (ConnectionRefusedError, socket.timeout):
-            print("Could not reach host")
+            log.warning("Could not reach host")
 
     def _run(self):
         while self.connected:
@@ -34,7 +34,7 @@ class Client(Messenger):
                     self.connected = False
             except socket.timeout:
                 pass
-        print(f"{self} stops listening")
+        log.info(f"{self} stops listening")
 
     def closing_statement(self):
         self.send_message(f"<{self.name} has left the chat>")
