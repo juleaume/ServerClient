@@ -98,10 +98,8 @@ class MessageBox(QGroupBox):
 
 
 class TextShow(QTextEdit):
-    enter_pressed = pyqtSignal()
-
     def __init__(self, *args, **kwargs):
-        super(TextShow, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
         e.ignore()
