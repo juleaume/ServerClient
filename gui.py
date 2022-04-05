@@ -1,11 +1,10 @@
-import sys
 from typing import Union
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, \
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, \
     QGroupBox, QVBoxLayout, QLabel, QLineEdit, QComboBox, QPushButton, \
-    QTextEdit, QCheckBox
+    QTextEdit
 
 from client import Client
 from server import Server
@@ -15,7 +14,7 @@ from utils import get_available_hosts, log
 class MessageBox(QGroupBox):
     def __init__(self, parent, name, ip_type=QLineEdit):
         super().__init__(name)
-        self.parent = parent  # type: Window
+        self.parent = parent  # type: QMainWindow
         self.endpoint = None  # type: Union[None, Server, Client]
         layout = QVBoxLayout()
         self.setLayout(layout)
