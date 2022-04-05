@@ -21,6 +21,7 @@ class MultipointServer(Messenger):
             connection, address = self._sock.accept()
             log.info(f"new connection from {address}")
             connection.settimeout(.5)
+            connection.send(f"<Welcome to the server>\n".encode())
             self.connection_pool.append(connection)
             if self.first_connection:
                 self.first_connection = False
