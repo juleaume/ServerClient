@@ -1,5 +1,5 @@
-import socket
 import sys
+from typing import Union
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, Qt
@@ -9,7 +9,92 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, \
 
 from client import Client
 from server import Server
-from utils import get_available_hosts, Messenger, log
+from utils import get_available_hosts, log
+
+
+class MessageBox(QGroupBox):
+    def __init__(self, parent, name, ip_type=QLineEdit):
+        super().__init__(name)
+        self.parent = parent  # type: Window
+        self.endpoint = None  # type: Union[None, Server, Client]
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        ip_layout = QHBoxLayout()
+        ip_label = QLabel("IP")
+        ip_layout.addWidget(ip_label, 1, Qt.AlignRight)
+        if ip_type == QLineEdit:
+            self.ip_selector = QLineEdit("127.0.0.1")
+            self.address_button = QPushButton("Connect")
+            self.ip_selector.returnPressed.connect(self.address_button.click)
+        else:
+            self.ip_selector = QComboBox()
+            self.ip_selector.addItems(get_available_hosts())
+            self.address_button = QPushButton("Create")
+
+        ip_layout.addWidget(self.ip_selector, 2, Qt.AlignLeft)
+        layout.addLayout(ip_layout)
+
+        port_layout = QHBoxLayout()
+        port_label = QLabel("Port")
+        port_layout.addWidget(port_label, 1, Qt.AlignRight)
+        self.port_selector = QLineEdit("7878")
+        self.port_selector.returnPressed.connect(self.address_button.click)
+        port_layout.addWidget(self.port_selector, 2, Qt.AlignLeft)
+        layout.addLayout(port_layout)
+
+        layout.addWidget(self.address_button)
+
+        self.text_history_box = TextShow()
+        layout.addWidget(self.text_history_box)
+        text_layout = QHBoxLayout()
+        self.user_text_message_box = QLineEdit()
+        self.user_text_message_box.setEnabled(False)
+        text_layout.addWidget(self.user_text_message_box, 2)
+        self.send_button = QPushButton("↲")
+        self.send_button.clicked.connect(self._send_and_place)
+        text_layout.addWidget(self.send_button, 1, Qt.AlignBottom)
+
+        self.user_text_message_box.returnPressed.connect(self.send_button.click)
+
+        layout.addLayout(text_layout)
+
+    def _send_and_place(self):
+        if self.endpoint is None:
+            log.error("Not connected")
+            return
+        msg = self.user_text_message_box.text()
+        if msg:
+            if not self.parent.agnostic:
+                signed_msg = f"[{self.endpoint.name}] {msg}"
+            else:
+                signed_msg = msg
+            self.endpoint.send_message(signed_msg)
+            t = self.text_history_box.toPlainText()
+            t = f"{t}{signed_msg}\n"
+            self.text_history_box.setText(t)
+            self.user_text_message_box.setText('')
+
+    def update_text(self):
+        if self.endpoint is not None:
+            t = self.text_history_box.toPlainText()
+            message = f"{t}{self.endpoint.message.decode()}"
+            self.text_history_box.setText(message)
+        else:
+            log.error("Endpoint is not connected")
+
+    def connect(self, endpoint):
+        self.endpoint = endpoint
+
+    @property
+    def ip(self):
+        if isinstance(self.ip_selector, QComboBox):
+            return self.ip_selector.currentText()
+        else:
+            return self.ip_selector.text()
+
+    @property
+    def port(self):
+        return int(self.port_selector.text())
 
 
 class TextShow(QTextEdit):
@@ -64,38 +149,14 @@ class Window(QMainWindow):
 
         self.layout.addWidget(settings_box)
 
-        s_ip, s_port, s_create, s_message, s_send_button, s_history = \
-            self._create_box("Server", QComboBox)
-        c_ip, c_port, c_connect, c_message, c_send_button, c_history = \
-            self._create_box("Client")
+        self.server_box = MessageBox(self, "Server", QComboBox)
+        self.layout.addWidget(self.server_box)
 
-        s_create.clicked.connect(
-            lambda: self.create_server(
-                s_ip.currentText(), int(s_port.text()), s_history, s_message)
-        )
-        c_connect.clicked.connect(
-            lambda: self.create_client(
-                c_ip.text(), int(c_port.text()), c_history, c_message)
-        )
+        self.client_box = MessageBox(self, "Client")
+        self.layout.addWidget(self.client_box)
 
-        def send_and_place(endpoint: Messenger, message: QLineEdit,
-                           dialog: QTextEdit):
-            msg = message.text()
-            if msg:
-                if not self.agnostic:
-                    signed_msg = f"[{endpoint.name}] {msg}"
-                else:
-                    signed_msg = msg
-                endpoint.send_message(signed_msg)
-                t = dialog.toPlainText()
-                t = f"{t}{signed_msg}\n"
-                dialog.setText(t)
-                message.setText('')
-
-        s_send_button.clicked.connect(
-            lambda: send_and_place(self.server, s_message, s_history))
-        c_send_button.clicked.connect(
-            lambda: send_and_place(self.client, c_message, c_history))
+        self.server_box.address_button.clicked.connect(self.create_server)
+        self.client_box.address_button.clicked.connect(self.create_client)
 
         self.show()
 
@@ -128,83 +189,32 @@ class Window(QMainWindow):
                     f"<{former_name} is now {self.client.name}>"
                 )
 
-    def create_server(self, ip, port, messages, text_box):
-        self.server = Server(ip, port, self.server_message)
+    def create_server(self):
+        self.server = Server(
+            self.server_box.ip, self.server_box.port, self.server_message
+        )
         self.set_agnostic()
+        self.server_box.connect(self.server)
         if self.name and not self.agnostic:
             self.server.name = self.name
         self.server.run()
-        self.server_message.connect(
-            lambda: self._update_text(messages, self.server)
-        )
-        text_box.setEnabled(True)  # open text box even if no one is
-        # listening, the sending will fail anyway
+        self.server_message.connect(self.server_box.update_text)
+        self.server_box.user_text_message_box.setEnabled(True)  # open text box even
+        # if no one is listening, the sending will fail anyway
 
-    def create_client(self, ip, port, messages, text_box):
-        self.client = Client(ip, port, self.client_message)
+    def create_client(self):
+        self.client = Client(
+            self.client_box.ip, self.client_box.port, self.client_message
+        )
         self.set_agnostic()
+        self.client_box.connect(self.client)
         if self.name and not self.agnostic:
             self.client.name = self.name
-        self.client_message.connect(
-            lambda: self._update_text(messages, self.client)
-        )
+        self.client_message.connect(self.client_box.update_text)
         self.client.connect()
         self.client.run()
-        text_box.setEnabled(self.client.connected)  # only open the text
-        # box if the client is connected to a server
-
-    @staticmethod
-    def _update_text(box: QTextEdit, endpoint: Messenger):
-        t = box.toPlainText()
-        message = f"{t}{endpoint.message.decode()}"
-        box.setText(message)
-
-    def _create_box(self, name: str, ip_type=QLineEdit):
-        group_box = QGroupBox(name)
-        layout = QVBoxLayout()
-        group_box.setLayout(layout)
-        ip_layout = QHBoxLayout()
-        ip_label = QLabel("IP")
-        ip_layout.addWidget(ip_label, 1, Qt.AlignRight)
-        if ip_type == QLineEdit:
-            ip_selector = QLineEdit("127.0.0.1")
-            address_button = QPushButton("Connect")
-            ip_selector.returnPressed.connect(address_button.click)
-        else:
-            ip_selector = QComboBox()
-            ip_selector.addItems(get_available_hosts())
-            address_button = QPushButton("Create")
-
-        ip_layout.addWidget(ip_selector, 2, Qt.AlignLeft)
-        layout.addLayout(ip_layout)
-
-        port_layout = QHBoxLayout()
-        port_label = QLabel("Port")
-        port_layout.addWidget(port_label, 1, Qt.AlignRight)
-        port_selector = QLineEdit("7878")
-        port_selector.returnPressed.connect(address_button.click)
-        port_layout.addWidget(port_selector, 2, Qt.AlignLeft)
-        layout.addLayout(port_layout)
-
-        layout.addWidget(address_button)
-
-        message_box = TextShow()
-        layout.addWidget(message_box)
-        text_layout = QHBoxLayout()
-        text_box = QLineEdit()
-        text_box.setEnabled(False)
-        text_layout.addWidget(text_box, 2)
-        send_button = QPushButton("↲")
-        text_layout.addWidget(send_button, 1, Qt.AlignBottom)
-
-        text_box.returnPressed.connect(send_button.click)
-
-        layout.addLayout(text_layout)
-
-        self.layout.addWidget(group_box)
-
-        return ip_selector, port_selector, \
-               address_button, text_box, send_button, message_box
+        self.client_box.user_text_message_box.setEnabled(self.client.connected)
+        # only open the  text box if the client is connected to a server
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         log.info("closing window")
