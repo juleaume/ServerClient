@@ -71,6 +71,9 @@ class MessageBox(QGroupBox):
             t = self.text_history_box.toPlainText()
             t = f"{t}{signed_msg}\n"
             self.text_history_box.setText(t)
+            text_cursor = self.text_history_box.textCursor()
+            text_cursor.setPosition(len(t))
+            self.text_history_box.setTextCursor(text_cursor)
             self.user_text_message_box.setText('')
 
     def update_text(self):
