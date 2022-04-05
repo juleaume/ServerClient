@@ -31,13 +31,22 @@ class MultipointServer(Messenger):
         while self.connected:
             for connection in self.connection_pool:  # type:socket.socket
                 try:
-                    self.message = connection.recv(4096)
+                    message = connection.recv(4096)
+                    if message:
+                        self.message = message
+                    else:
+                        raise ConnectionAbortedError
                     self._send_to_all(connection)
                     if self.signal is not None:
                         self.signal.emit()
                 except socket.timeout:
                     # going to the next connection endpoint
                     continue
+                except (ConnectionAbortedError, ConnectionResetError):
+                    log.info(
+                        f"[{self}] Someone disconnected, removing agent"
+                    )
+                    self.connection_pool.remove(connection)
 
     def _send_to_all(self, sender: socket.socket):
         for connection in self.connection_pool:  # type: socket.socket
