@@ -79,10 +79,10 @@ class Messenger:
     def closing_statement(self):
         pass
 
-    def send_message(self, message: bytes):
+    def send_message(self, message: str):
         if self.connected:
             try:
-                self.connection.send(message)
+                self.connection.send(f"{message}\n".encode())
             except ConnectionResetError:
                 print("Connection failed")
             except AttributeError:

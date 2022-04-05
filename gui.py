@@ -89,7 +89,7 @@ class Window(QMainWindow):
                     signed_msg = f"[{endpoint.name}] {msg}"
                 else:
                     signed_msg = msg
-                endpoint.send_message(signed_msg.encode())
+                endpoint.send_message(signed_msg)
                 t = dialog.toPlainText()
                 t = f"{t}{signed_msg}\n"
                 dialog.setText(t)
@@ -121,13 +121,13 @@ class Window(QMainWindow):
                 former_name = self.server.name
                 self.server.name = self.name
                 self.server.send_message(
-                    f"<{former_name} is now {self.server.name}>".encode()
+                    f"<{former_name} is now {self.server.name}>"
                 )
             if self.client is not None:
                 former_name = self.client.name
                 self.client.name = self.name
                 self.client.send_message(
-                    f"<{former_name} is now {self.client.name}>".encode()
+                    f"<{former_name} is now {self.client.name}>"
                 )
 
     def create_server(self, ip, port, messages, text_box):
@@ -156,7 +156,7 @@ class Window(QMainWindow):
     @staticmethod
     def _update_text(box: QTextEdit, endpoint: Messenger):
         t = box.toPlainText()
-        message = f"{t}{endpoint.message.decode()}\n"
+        message = f"{t}{endpoint.message.decode()}"
         box.setText(message)
 
     def _create_box(self, name: str, ip_type=QLineEdit):
