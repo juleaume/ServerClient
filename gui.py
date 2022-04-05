@@ -45,10 +45,7 @@ class Window(QMainWindow):
         agnostic_layout = QHBoxLayout()
         agnostic_label = QLabel("Agnostic")
         self.agnostic_checkbox = QCheckBox()
-        self.agnostic_checkbox.clicked.connect(
-            lambda: self.set_agnostic(not self.agnostic_checkbox.isChecked())
-
-        )
+        self.agnostic_checkbox.clicked.connect(self.set_agnostic)
         agnostic_layout.addWidget(agnostic_label)
         agnostic_layout.addWidget(self.agnostic_checkbox, 1, Qt.AlignLeft)
         settings_layout.addLayout(agnostic_layout)
@@ -106,8 +103,9 @@ class Window(QMainWindow):
     def agnostic(self):
         return self.agnostic_checkbox.isChecked()
 
-    def set_agnostic(self, value):
-        self.username_entry.setEnabled(value)
+    def set_agnostic(self):
+        value = self.agnostic_checkbox.isChecked()
+        self.username_entry.setEnabled(not value)
         if self.server is not None:
             self.server.agnostic = value
         if self.client is not None:
@@ -132,6 +130,7 @@ class Window(QMainWindow):
 
     def create_server(self, ip, port, messages, text_box):
         self.server = Server(ip, port, self.server_message)
+        self.set_agnostic()
         if self.name and not self.agnostic:
             self.server.name = self.name
         self.server.run()
@@ -143,6 +142,7 @@ class Window(QMainWindow):
 
     def create_client(self, ip, port, messages, text_box):
         self.client = Client(ip, port, self.client_message)
+        self.set_agnostic()
         if self.name and not self.agnostic:
             self.client.name = self.name
         self.client_message.connect(
