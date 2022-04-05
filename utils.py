@@ -103,11 +103,11 @@ class Messenger:
             try:
                 self.connection.send(f"{message}\n".encode())
             except ConnectionResetError:
-                log.warning("Connection failed")
+                log.warning(f"[{self}] Connection failed")
             except AttributeError:
-                log.warning("Sending failed, not connected")
+                log.warning(f"[{self}] Sending failed, not connected")
         else:
-            log.warning("Not connected")
+            log.warning(f"[{self}] Not connected")
 
     def _run(self):
         raise NotImplemented

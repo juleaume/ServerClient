@@ -12,9 +12,9 @@ class Client(Messenger):
 
     def connect(self):
         if self.address == (None, None):
-            log.error("No address used")
+            log.error(f"[{self}] No address used")
         try:
-            log.info(f"Trying to connect to {self.address}")
+            log.info(f"[{self}] Trying to connect to {self.address}")
             self.connection.settimeout(10)
             self.connection.connect(self.address)
             self.connection.settimeout(2)
