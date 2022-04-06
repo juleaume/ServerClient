@@ -34,6 +34,8 @@ class Client(Messenger):
                     self.connected = False
             except socket.timeout:
                 pass
+            except (ConnectionResetError, ConnectionAbortedError):
+                self.connected = False
         log.info(f"{self} stops listening")
 
     def closing_statement(self):
