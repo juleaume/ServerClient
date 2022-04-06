@@ -2,6 +2,7 @@ from typing import Union
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QTextCursor
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, \
     QGroupBox, QVBoxLayout, QLabel, QLineEdit, QComboBox, QPushButton, \
     QTextEdit
@@ -71,9 +72,7 @@ class MessageBox(QGroupBox):
             t = self.text_history_box.toPlainText()
             t = f"{t}{signed_msg}\n"
             self.text_history_box.setText(t)
-            text_cursor = self.text_history_box.textCursor()
-            text_cursor.setPosition(len(t))
-            self.text_history_box.setTextCursor(text_cursor)
+            self.text_history_box.moveCursor(QTextCursor.End)
             self.user_text_message_box.setText('')
 
     def update_text(self):
@@ -81,9 +80,7 @@ class MessageBox(QGroupBox):
             t = self.text_history_box.toPlainText()
             message = f"{t}{self.endpoint.message.decode()}"
             self.text_history_box.setText(message)
-            cursor = self.text_history_box.textCursor()
-            cursor.setPosition(len(t))
-            self.text_history_box.setTextCursor(cursor)
+            self.text_history_box.moveCursor(QTextCursor.End)
         else:
             log.error("Endpoint is not connected")
 
