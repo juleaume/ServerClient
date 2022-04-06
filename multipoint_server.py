@@ -1,12 +1,14 @@
 import socket
+import sys
 
 from utils import Messenger, log
 
 
 class MultipointServer(Messenger):
-    def __init__(self, ip, port, signal=None):
+    def __init__(self, ip, port, signal=None, name=None):
         super(MultipointServer, self).__init__(ip, port, signal)
-
+        if name is not None:
+            self.name = name
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.connection_pool = list()
@@ -21,8 +23,12 @@ class MultipointServer(Messenger):
             connection, address = self._sock.accept()
             log.info(f"new connection from {address}")
             connection.settimeout(.5)
-            connection.send(f"<Welcome to the server>\n".encode())
+            connection.send(f"<Welcome to {self}>\n".encode())
             self.connection_pool.append(connection)
+            connection.send(
+                f"<There are {len(self.connection_pool)} people "
+                f"online>\n".encode()
+            )
             if self.first_connection:
                 self.first_connection = False
                 self.run()
@@ -54,9 +60,13 @@ class MultipointServer(Messenger):
                 connection.send(self.message)
 
     def __str__(self):
-        return "Multipoint Server"
+        return self.name
 
 
 if __name__ == '__main__':
-    server = MultipointServer("", 7979)
+    if len(sys.argv) > 1:
+        name = sys.argv[1]
+    else:
+        name = None
+    server = MultipointServer("", 7979, name=name)
     server.start()
