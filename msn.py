@@ -14,9 +14,13 @@ THEMES = {
     "Cyberpunk": "background-color: #002b36; "
                  "color: #b58900;"
                  "font-size: 15px",
-    "Fallout": "background-color: #001f00; "
+    "Fallout": "background-color: #001b00; "
                "color: #1bff80;"
-               "font-size: 15px"
+               "font-size: 15px",
+    "Vault-Tech": "background-color: #325886; "
+               "color: #fef265;"
+               "font-size: 15px",
+
 }
 
 
