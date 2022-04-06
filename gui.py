@@ -81,6 +81,9 @@ class MessageBox(QGroupBox):
             t = self.text_history_box.toPlainText()
             message = f"{t}{self.endpoint.message.decode()}"
             self.text_history_box.setText(message)
+            cursor = self.text_history_box.textCursor()
+            cursor.setPosition(len(t))
+            self.text_history_box.setTextCursor(cursor)
         else:
             log.error("Endpoint is not connected")
 
