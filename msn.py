@@ -58,6 +58,7 @@ class Window(QMainWindow):
         self.client.connect()
         self.client.run()
         self.client_box.user_text_message_box.setEnabled(self.client.connected)
+        self.client_signal.connect(lambda: app.alert(self))
 
     def _setup_page(self):
         setup_box = QGroupBox("User")
