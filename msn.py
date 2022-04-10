@@ -1,3 +1,4 @@
+import os
 import sys
 from typing import Union
 
@@ -40,7 +41,7 @@ class Window(QMainWindow):
         self.client_box = MessageBox(self, "MSN")
         self.layout.addWidget(self.client_box)
         self.client = None  # type: Union[None, Client]
-        self._name = socket.gethostname()
+        self._name = f"{os.getlogin()}@{socket.gethostname()}"
         self.client_box.address_button.clicked.connect(self.create_client)
         self.show()
 

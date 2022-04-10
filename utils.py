@@ -1,3 +1,4 @@
+import os
 import socket
 import sys
 import threading
@@ -19,7 +20,7 @@ class Messenger:
         self.signal = signal
         self._connected = False
         self._last_message = b''
-        self._name = socket.gethostname()
+        self._name = f"{os.getlogin()}@{socket.gethostname()}"
         self._agnostic = False
         self.reading_thread = None  # type: threading.Thread
         self._connection = None  # type: socket.socket
@@ -102,7 +103,7 @@ class Messenger:
         if self.connected:
             try:
                 self.connection.send(f"{message}\n".encode())
-            except ConnectionResetError:
+            except ConnectionError:
                 log.warning(f"[{self}] Connection failed")
             except AttributeError:
                 log.warning(f"[{self}] Sending failed, not connected")
