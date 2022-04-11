@@ -54,7 +54,8 @@ class MessageBox(QGroupBox):
         self.send_button.clicked.connect(self._send_and_place)
         text_layout.addWidget(self.send_button, 1, Qt.AlignBottom)
 
-        self.user_text_message_box.returnPressed.connect(self.send_button.click)
+        self.user_text_message_box.returnPressed.connect(
+            self.send_button.click)
 
         layout.addLayout(text_layout)
 
@@ -69,11 +70,14 @@ class MessageBox(QGroupBox):
             else:
                 signed_msg = msg
             self.endpoint.send_message(signed_msg)
-            t = self.text_history_box.toPlainText()
-            t = f"{t}{signed_msg}\n"
-            self.text_history_box.setText(t)
-            self.text_history_box.moveCursor(QTextCursor.End)
-            self.user_text_message_box.setText('')
+            self.append_message(signed_msg)
+
+    def append_message(self, message):
+        t = self.text_history_box.toPlainText()
+        t = f"{t}{message}\n"
+        self.text_history_box.setText(t)
+        self.text_history_box.moveCursor(QTextCursor.End)
+        self.user_text_message_box.setText('')
 
     def update_text(self):
         if self.endpoint is not None:
@@ -105,5 +109,3 @@ class TextShow(QTextEdit):
 
     def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
         e.ignore()
-
-

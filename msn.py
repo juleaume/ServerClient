@@ -93,7 +93,9 @@ class Window(QMainWindow):
             if self.client.name != name:
                 former_name = self.client.name
                 self.client.name = name
-                self.client.send_message(f"<{former_name} is now {name}>")
+                change_text = f"<{former_name} is now {name}>"
+                self.client.send_message(change_text)
+                self.client_box.append_message(change_text)
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         log.info("closing window")
