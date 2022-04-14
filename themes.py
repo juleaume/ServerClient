@@ -9,12 +9,12 @@ COLOR_SCHEME = {
                   "color": "#c8b029",
                   "font-size": "15px"},
     "Zelda": {"background-color": "#536f50",
-              "color": "#fdffe0",
+              "color": "#ffff00",
               "font-size": "15px"},
     "Pip-boy": {"background-color": "#001b00",
                 "color": "#1bff80",
                 "font-size": "15px"},
-    "Vault-Tech": {"background-color": "#325886",
+    "Vault-Tec": {"background-color": "#325886",
                    "color": "#fef265",
                    "font-size": "15px"},
 }
@@ -30,3 +30,5 @@ def get_string(value: dict):
 THEMES = {
     key: get_string(COLOR_SCHEME.get(key)) for key in COLOR_SCHEME.keys()
 }
+
+DEFAULT_THEME = list(THEMES.keys())[0]

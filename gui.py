@@ -96,9 +96,20 @@ class MessageBox(QGroupBox):
         else:
             return self.ip_selector.text()
 
+    @ip.setter
+    def ip(self, value):
+        if isinstance(self.ip_selector, QComboBox):
+            self.ip_selector.setCurrentText(value)
+        else:
+            self.ip_selector.setText(value)
+
     @property
     def port(self):
         return int(self.port_selector.text())
+
+    @port.setter
+    def port(self, value):
+        self.port_selector.setText(f"{value}")
 
 
 class TextShow(QTextEdit):
