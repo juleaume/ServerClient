@@ -10,19 +10,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, \
 from client import Client
 from gui import MessageBox
 from utils import log, socket
-
-THEMES = {
-    "Cyberpunk": "background-color: #002b36; "
-                 "color: #b58900;"
-                 "font-size: 15px",
-    "Fallout": "background-color: #001b00; "
-               "color: #1bff80;"
-               "font-size: 15px",
-    "Vault-Tech": "background-color: #325886; "
-               "color: #fef265;"
-               "font-size: 15px",
-
-}
+from themes import COLOR_SCHEME, THEMES
 
 
 class Window(QMainWindow):
@@ -32,7 +20,7 @@ class Window(QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
         self.setWindowTitle("Messenger")
-        self.setStyleSheet(THEMES.get("Cyberpunk"))
+        self.setStyleSheet(THEMES.get("Solarized"))
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QHBoxLayout()
@@ -93,7 +81,7 @@ class Window(QMainWindow):
             if self.client.name != name:
                 former_name = self.client.name
                 self.client.name = name
-                change_text = f"<{former_name} is now {name}>"
+                change_text = f"<{former_name} is now {name}>\n"
                 self.client.send_message(change_text)
                 self.client_box.append_message(change_text)
 

@@ -102,7 +102,7 @@ class Messenger:
     def send_message(self, message: str):
         if self.connected:
             try:
-                self.connection.send(f"{message}\n".encode())
+                self.connection.send(message.encode())
             except ConnectionError:
                 log.warning(f"[{self}] Connection failed")
             except AttributeError:

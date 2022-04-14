@@ -85,13 +85,13 @@ class Window(QMainWindow):
                 former_name = self.server.name
                 self.server.name = self.name
                 self.server.send_message(
-                    f"<{former_name} is now {self.server.name}>"
+                    f"<{former_name} is now {self.server.name}>\n"
                 )
             if self.client is not None:
                 former_name = self.client.name
                 self.client.name = self.name
                 self.client.send_message(
-                    f"<{former_name} is now {self.client.name}>"
+                    f"<{former_name} is now {self.client.name}>\n"
                 )
 
     def create_server(self):

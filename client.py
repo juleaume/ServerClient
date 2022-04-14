@@ -21,7 +21,7 @@ class Client(Messenger):
             self.connected = True
             if not self.agnostic:
                 self.send_message(
-                    f"<{self.name} has entered the chat>"
+                    f"<{self.name} has entered the chat>\n"
                 )
         except (ConnectionRefusedError, socket.timeout):
             log.warning("Could not reach host")
@@ -39,7 +39,7 @@ class Client(Messenger):
         log.info(f"{self} stops listening")
 
     def closing_statement(self):
-        self.send_message(f"<{self.name} has left the chat>")
+        self.send_message(f"<{self.name} has left the chat>\n")
 
     def __str__(self):
         return "Client"

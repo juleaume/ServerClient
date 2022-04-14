@@ -20,7 +20,7 @@ class Server(Messenger):
         self.connection.settimeout(1)
         if not self.agnostic:
             self.send_message(
-                f"<Welcome to {self.name} server>"
+                f"<Welcome to {self.name} server>\n"
             )
         while self.connected:
             try:
@@ -31,7 +31,7 @@ class Server(Messenger):
                 pass
 
     def closing_statement(self):
-        self.send_message(f"<{self.name} has closed the chat>")
+        self.send_message(f"<{self.name} has closed the chat>\n")
 
     def __str__(self):
         return "Server"

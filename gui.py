@@ -66,16 +66,14 @@ class MessageBox(QGroupBox):
         msg = self.user_text_message_box.text()
         if msg:
             if not self.parent.agnostic:
-                signed_msg = f"[{self.endpoint.name}] {msg}"
+                signed_msg = f"[{self.endpoint.name}] {msg}\n"
             else:
-                signed_msg = msg
+                signed_msg = f"{msg}\n"
             self.endpoint.send_message(signed_msg)
             self.append_message(signed_msg)
 
     def append_message(self, message):
-        t = self.text_history_box.toPlainText()
-        t = f"{t}{message}\n"
-        self.text_history_box.setText(t)
+        self.text_history_box.insertPlainText(message)
         self.text_history_box.moveCursor(QTextCursor.End)
         self.user_text_message_box.setText('')
 
