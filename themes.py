@@ -15,8 +15,8 @@ COLOR_SCHEME = {
                 "color": "#1bff80",
                 "font-size": "15px"},
     "Vault-Tec": {"background-color": "#325886",
-                   "color": "#fef265",
-                   "font-size": "15px"},
+                  "color": "#fef265",
+                  "font-size": "15px"},
 }
 
 

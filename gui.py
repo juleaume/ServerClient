@@ -64,6 +64,7 @@ class MessageBox(QGroupBox):
             log.error("Not connected")
             return
         msg = self.user_text_message_box.text()
+        self.user_text_message_box.setText('')
         if msg:
             if not self.parent.agnostic:
                 signed_msg = f"[{self.endpoint.name}] {msg}\n"
@@ -75,14 +76,10 @@ class MessageBox(QGroupBox):
     def append_message(self, message):
         self.text_history_box.insertPlainText(message)
         self.text_history_box.moveCursor(QTextCursor.End)
-        self.user_text_message_box.setText('')
 
     def update_text(self):
         if self.endpoint is not None:
-            t = self.text_history_box.toPlainText()
-            message = f"{t}{self.endpoint.message.decode()}"
-            self.text_history_box.setText(message)
-            self.text_history_box.moveCursor(QTextCursor.End)
+            self.append_message(self.endpoint.message.decode())
         else:
             log.error("Endpoint is not connected")
 

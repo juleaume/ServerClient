@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import threading
 from typing import Union
 
 from PyQt5 import QtGui
@@ -8,6 +9,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, \
     QGroupBox, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox
+from playsound import playsound
 
 from client import Client
 from gui import MessageBox
@@ -81,7 +83,14 @@ class Window(QMainWindow):
         self.client.connect()
         self.client.run()
         self.client_box.user_text_message_box.setEnabled(self.client.connected)
-        self.client_signal.connect(lambda: app.alert(self))
+        self.client_signal.connect(self._send_notification)
+
+    def _send_notification(self):
+        app.alert(self)
+        threading.Thread(
+            target=playsound,
+            args=(os.path.join("sounds", "notification.mp3"),)
+        ).start()
 
     def _setup_page(self):
         setup_box = QGroupBox("User")
