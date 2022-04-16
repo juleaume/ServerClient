@@ -79,6 +79,7 @@ class MessageBox(QGroupBox):
         self.user_text_message_box.setEnabled(False)
         text_layout.addWidget(self.user_text_message_box, 2)
         self.send_button = QPushButton("↲")
+        self.send_button.setFixedWidth(30)
         self.send_button.clicked.connect(self._send_and_place)
         text_layout.addWidget(self.send_button, 1, Qt.AlignBottom)
 
