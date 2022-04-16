@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, \
     QComboBox
 
 from client import Client
-from gui import MessageBox
+from gui import MessageBox, SocketConfigurator
 from server import Server
 from utils import log
 
@@ -54,14 +54,18 @@ class Window(QMainWindow):
 
         self.layout.addWidget(settings_box)
 
-        self.server_box = MessageBox(self, "Server", QComboBox)
+        self.server_settings = SocketConfigurator("Server", QComboBox)
+        self.layout.addWidget(self.server_settings)
+        self.server_box = MessageBox(self, "Server")
         self.layout.addWidget(self.server_box)
 
+        self.client_settings = SocketConfigurator("Client")
+        self.layout.addWidget(self.client_settings)
         self.client_box = MessageBox(self, "Client")
         self.layout.addWidget(self.client_box)
 
-        self.server_box.address_button.clicked.connect(self.create_server)
-        self.client_box.address_button.clicked.connect(self.create_client)
+        self.server_settings.address_button.clicked.connect(self.create_server)
+        self.client_settings.address_button.clicked.connect(self.create_client)
 
         self.show()
 
@@ -96,7 +100,8 @@ class Window(QMainWindow):
 
     def create_server(self):
         self.server = Server(
-            self.server_box.ip, self.server_box.port, self.server_message
+            self.server_settings.ip, self.server_settings.port,
+            self.server_message
         )
         self.set_agnostic()
         self.server_box.connect(self.server)
@@ -109,7 +114,8 @@ class Window(QMainWindow):
 
     def create_client(self):
         self.client = Client(
-            self.client_box.ip, self.client_box.port, self.client_message
+            self.client_settings.ip, self.client_settings.port,
+            self.client_message
         )
         self.set_agnostic()
         self.client_box.connect(self.client)
