@@ -12,11 +12,9 @@ from server import Server
 from utils import get_available_hosts, log
 
 
-class MessageBox(QGroupBox):
-    def __init__(self, parent, name, ip_type=QLineEdit):
+class SocketConfigurator(QGroupBox):
+    def __init__(self, name, ip_type=QLineEdit):
         super().__init__(name)
-        self.parent = parent  # type: QMainWindow
-        self.endpoint = None  # type: Union[None, Server, Client]
         layout = QVBoxLayout()
         self.setLayout(layout)
         ip_layout = QHBoxLayout()
@@ -44,6 +42,36 @@ class MessageBox(QGroupBox):
 
         layout.addWidget(self.address_button)
 
+    @property
+    def ip(self):
+        if isinstance(self.ip_selector, QComboBox):
+            return self.ip_selector.currentText()
+        else:
+            return self.ip_selector.text()
+
+    @ip.setter
+    def ip(self, value):
+        if isinstance(self.ip_selector, QComboBox):
+            self.ip_selector.setCurrentText(value)
+        else:
+            self.ip_selector.setText(value)
+
+    @property
+    def port(self):
+        return int(self.port_selector.text())
+
+    @port.setter
+    def port(self, value):
+        self.port_selector.setText(f"{value}")
+
+
+class MessageBox(QGroupBox):
+    def __init__(self, parent, name):
+        super().__init__(name)
+        self.parent = parent  # type: QMainWindow
+        self.endpoint = None  # type: Union[None, Server, Client]
+        layout = QVBoxLayout()
+        self.setLayout(layout)
         self.text_history_box = TextShow()
         layout.addWidget(self.text_history_box)
         text_layout = QHBoxLayout()
@@ -85,28 +113,6 @@ class MessageBox(QGroupBox):
 
     def connect(self, endpoint):
         self.endpoint = endpoint
-
-    @property
-    def ip(self):
-        if isinstance(self.ip_selector, QComboBox):
-            return self.ip_selector.currentText()
-        else:
-            return self.ip_selector.text()
-
-    @ip.setter
-    def ip(self, value):
-        if isinstance(self.ip_selector, QComboBox):
-            self.ip_selector.setCurrentText(value)
-        else:
-            self.ip_selector.setText(value)
-
-    @property
-    def port(self):
-        return int(self.port_selector.text())
-
-    @port.setter
-    def port(self, value):
-        self.port_selector.setText(f"{value}")
 
 
 class TextShow(QTextEdit):

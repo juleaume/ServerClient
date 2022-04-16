@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, \
 from playsound import playsound
 
 from client import Client
-from gui import MessageBox
+from gui import MessageBox, SocketConfigurator
 from utils import log, socket
 from themes import COLOR_SCHEME, THEMES, DEFAULT_THEME
 
@@ -44,14 +44,10 @@ class Window(QMainWindow):
         self.layout = QHBoxLayout()
         self.central_widget.setLayout(self.layout)
         self._setup_page()
-        self.client_box = MessageBox(self, "MSN")
-        self.client_box.ip = self.config.get("ip", "127.0.0.1")
-        self.client_box.port = self.config.get("port", 7979)
-        self.client_box.address_button.clicked.connect(self._save_address)
-        self.layout.addWidget(self.client_box)
+        self.messenger_box = MessageBox(self, "MSN")
+        self.layout.addWidget(self.messenger_box)
         self.client = None  # type: Union[None, Client]
         self._name = self.config.get("username", DEFAULT_NAME)
-        self.client_box.address_button.clicked.connect(self.create_client)
         self.show()
 
     def _set_stylesheet(self):
@@ -65,8 +61,8 @@ class Window(QMainWindow):
         self.save_config("theme", theme)
 
     def _save_address(self):
-        self.save_config("ip", self.client_box.ip)
-        self.save_config("port", self.client_box.port)
+        self.save_config("ip", self.address_box.ip)
+        self.save_config("port", self.address_box.port)
 
     def save_config(self, key, value):
         self.config[key] = value
@@ -74,15 +70,16 @@ class Window(QMainWindow):
             json.dump(self.config, conf)
 
     def create_client(self):
+        self._save_address()
         self.client = Client(
-            self.client_box.ip, self.client_box.port, self.client_signal
+            self.address_box.ip, self.address_box.port, self.client_signal
         )
         self.client.name = self._name
-        self.client_box.connect(self.client)
-        self.client_signal.connect(self.client_box.update_text)
+        self.messenger_box.connect(self.client)
+        self.client_signal.connect(self.messenger_box.update_text)
         self.client.connect()
         self.client.run()
-        self.client_box.user_text_message_box.setEnabled(self.client.connected)
+        self.messenger_box.user_text_message_box.setEnabled(self.client.connected)
         self.client_signal.connect(self._send_notification)
 
     def _send_notification(self):
@@ -93,10 +90,19 @@ class Window(QMainWindow):
         ).start()
 
     def _setup_page(self):
+        setup_layout = QVBoxLayout()
+
+        self.address_box = SocketConfigurator("Server")
+        self.address_box.ip = self.config.get("ip", "127.0.0.1")
+        self.address_box.port = self.config.get("port", 7979)
+        self.address_box.address_button.clicked.connect(self.create_client)
+
+        setup_layout.addWidget(self.address_box)
+
         setup_box = QGroupBox("User")
         layout = QVBoxLayout()
         setup_box.setLayout(layout)
-        self.layout.addWidget(setup_box)
+        setup_layout.addWidget(setup_box)
         username_label = QLabel("Username")
         username_label.setStyleSheet("text-decoration: underline")
         layout.addWidget(username_label, alignment=Qt.AlignTop)
@@ -124,6 +130,8 @@ class Window(QMainWindow):
         self.icon_label.setPixmap(theme_icon)
         layout.addWidget(self.icon_label, 0, Qt.AlignCenter)
 
+        self.layout.addLayout(setup_layout)
+
     def _set_username(self):
         if self.username_entry.text():
             name = self.username_entry.text()
@@ -137,7 +145,7 @@ class Window(QMainWindow):
                 self.client.name = name
                 change_text = f"<{former_name} is now {name}>\n"
                 self.client.send_message(change_text)
-                self.client_box.append_message(change_text)
+                self.messenger_box.append_message(change_text)
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         log.info("closing window")
