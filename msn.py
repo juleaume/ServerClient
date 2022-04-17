@@ -1,4 +1,5 @@
 import os
+import pickle
 import sys
 import json
 import threading
@@ -11,17 +12,82 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, \
     QGroupBox, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox
 from playsound import playsound
 
-from client import Client
-from gui import MessageBox, SocketConfigurator
-from utils import log, socket
+from gui import MessageBox, ServerConfigurator
+from utils import log, socket, Messenger
 from themes import COLOR_SCHEME, THEMES, DEFAULT_THEME
 
 CONFIG_FILE = ".config"
 DEFAULT_NAME = f"{os.getlogin()}@{socket.gethostname()}"
 
 
+class MSNClient(Messenger):
+    def __init__(self, ip=None, port=None,
+                 message_signal=None, info_signal=None):
+        super().__init__(ip, port, message_signal)
+        self.info_signal = info_signal  # type: pyqtSignal
+        self.server_info = list()
+        self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.connection.settimeout(2)
+
+    def connect(self, propagate=False):
+        if self.address == (None, None):
+            log.error(f"[{self}] No address used")
+        try:
+            log.info(f"[{self}] Trying to connect to {self.address}")
+            self.connection.settimeout(10)
+            self.connection.connect(self.address)
+            self.connection.settimeout(2)
+            self.connected = True
+            self.connection.send(pickle.dumps(("info", self.name)))
+        except (ConnectionError, socket.timeout):
+            log.warning("Could not reach host")
+            if propagate:
+                raise
+
+    def _run(self):
+        while self.connected:
+            try:
+                data = self.connection.recv(4096)
+                if data == b'':
+                    self.connected = False
+                    break
+                else:
+                    command, value = pickle.loads(data)
+                    if command == "message":
+                        self.message = value
+                    elif command == "info":
+                        self.server_info = value
+                        if self.info_signal is not None:
+                            self.info_signal.emit()
+            except socket.timeout:
+                pass
+            except ConnectionError:
+                self.connected = False
+        log.info(f"{self} stops listening")
+
+    def send_message(self, message: str):
+        if self.connected:
+            try:
+                data = ("message", message)
+                self.connection.send(pickle.dumps(data))
+            except ConnectionError:
+                log.warning(f"[{self}] Connection failed")
+            except AttributeError:
+                log.warning(f"[{self}] Sending failed, not connected")
+        else:
+            log.warning(f"[{self}] Not connected")
+
+    def closing_statement(self):
+        self.connection.send(pickle.dumps(("info", "remove")))
+
+    def __str__(self):
+        return "Client"
+
+
 class Window(QMainWindow):
     client_signal = pyqtSignal()
+    server_signal = pyqtSignal()
     agnostic = False
 
     def __init__(self):
@@ -46,7 +112,7 @@ class Window(QMainWindow):
         self._setup_page()
         self.messenger_box = MessageBox(self, "MSN")
         self.layout.addWidget(self.messenger_box)
-        self.client = None  # type: Union[None, Client]
+        self.client = None  # type: Union[None, MSNClient]
         self._name = self.config.get("username", DEFAULT_NAME)
         self.show()
 
@@ -71,15 +137,21 @@ class Window(QMainWindow):
 
     def create_client(self):
         self._save_address()
-        self.client = Client(
-            self.address_box.ip, self.address_box.port, self.client_signal
+        self.client = MSNClient(
+            self.address_box.ip, self.address_box.port,
+            self.client_signal, self.server_signal
         )
         self.client.name = self._name
+        try:
+            self.client.connect(propagate=True)
+        except (socket.timeout, ConnectionError):
+            del self.client
+            return
         self.messenger_box.connect(self.client)
         self.client_signal.connect(self.messenger_box.update_text)
-        self.client.connect()
         self.client.run()
-        self.messenger_box.user_text_message_box.setEnabled(self.client.connected)
+        self.messenger_box.user_text_message_box.setEnabled(
+            self.client.connected)
         self.client_signal.connect(self._send_notification)
 
     def _send_notification(self):
@@ -89,13 +161,21 @@ class Window(QMainWindow):
             args=(os.path.join("sounds", "notification.mp3"),)
         ).start()
 
+    def update_server_info(self):
+        if self.client is not None:
+            text = ''
+            for name in self.client.server_info:
+                text += f"{name}\n"
+            self.address_box.server_info.setText(text)
+
     def _setup_page(self):
         setup_layout = QVBoxLayout()
 
-        self.address_box = SocketConfigurator("Server")
+        self.address_box = ServerConfigurator("Server", see_server_info=True)
         self.address_box.ip = self.config.get("ip", "127.0.0.1")
         self.address_box.port = self.config.get("port", 7979)
         self.address_box.address_button.clicked.connect(self.create_client)
+        self.server_signal.connect(self.update_server_info)
 
         setup_layout.addWidget(self.address_box)
 
@@ -141,17 +221,13 @@ class Window(QMainWindow):
         self.save_config("username", name)
         if self.client is not None:
             if self.client.name != name:
-                former_name = self.client.name
                 self.client.name = name
-                change_text = f"<{former_name} is now {name}>\n"
-                self.client.send_message(change_text)
-                self.messenger_box.append_message(change_text)
+                self.client.connection.send(pickle.dumps(("info", self._name)))
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         log.info("closing window")
         if self.client is not None:
             self.client.stop()
-            del self.client
 
 
 if __name__ == '__main__':

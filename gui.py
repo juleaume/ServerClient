@@ -12,8 +12,8 @@ from server import Server
 from utils import get_available_hosts, log
 
 
-class SocketConfigurator(QGroupBox):
-    def __init__(self, name, ip_type=QLineEdit):
+class ServerConfigurator(QGroupBox):
+    def __init__(self, name, ip_type=QLineEdit, see_server_info=False):
         super().__init__(name)
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -41,6 +41,11 @@ class SocketConfigurator(QGroupBox):
         layout.addLayout(port_layout)
 
         layout.addWidget(self.address_button)
+
+        self.server_info = TextShow()
+        if see_server_info:
+            layout.addWidget(self.server_info)
+
 
     @property
     def ip(self):
