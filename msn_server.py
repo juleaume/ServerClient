@@ -5,9 +5,9 @@ import sys
 from utils import Messenger, log
 
 
-class MultipointServer(Messenger):
+class MSNServer(Messenger):
     def __init__(self, ip, port, signal=None, name=None):
-        super(MultipointServer, self).__init__(ip, port, signal)
+        super().__init__(ip, port, signal)
         if name is not None:
             self.name = name
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,6 +62,7 @@ class MultipointServer(Messenger):
                     received = connection.recv(4096)
                     if received:
                         command, value = pickle.loads(received)
+                        log.info(f"{command}, {value}")
                         if command == "info":
                             self.update_info(
                                 connection, value, value == "remove"
@@ -86,7 +87,7 @@ class MultipointServer(Messenger):
     def _send_to_all(self, sender: socket.socket):
         for connection in self.connection_pool:  # type: socket.socket
             if not connection == sender:
-                connection.send(self.message)
+                connection.send(pickle.dumps(("message", self.message)))
 
     def __str__(self):
         return self.name
@@ -97,7 +98,7 @@ def main():
         name = sys.argv[1]
     else:
         name = None
-    server = MultipointServer("", 7979, name=name)
+    server = MSNServer("", 7979, name=name)
     server.start()
 
 

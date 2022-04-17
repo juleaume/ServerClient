@@ -46,7 +46,6 @@ class ServerConfigurator(QGroupBox):
         if see_server_info:
             layout.addWidget(self.server_info)
 
-
     @property
     def ip(self):
         if isinstance(self.ip_selector, QComboBox):
@@ -113,7 +112,7 @@ class MessageBox(QGroupBox):
 
     def update_text(self):
         if self.endpoint is not None:
-            self.append_message(self.endpoint.message.decode())
+            self.append_message(self.endpoint.message)
         else:
             log.error("Endpoint is not connected")
 
