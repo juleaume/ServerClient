@@ -1,3 +1,4 @@
+import socket
 import sys
 
 from PyQt5 import QtGui
@@ -7,14 +8,14 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, \
     QComboBox
 
 from client import Client
-from gui import MessageBox, SocketConfigurator
+from gui import MessageBox, ServerConfigurator
 from server import Server
 from utils import log
 
 
 class Window(QMainWindow):
-    server_message = pyqtSignal()
-    client_message = pyqtSignal()
+    server_message_signal = pyqtSignal()
+    client_message_signal = pyqtSignal()
 
     def __init__(self):
         super(Window, self).__init__()
@@ -54,12 +55,12 @@ class Window(QMainWindow):
 
         self.layout.addWidget(settings_box)
 
-        self.server_settings = SocketConfigurator("Server", QComboBox)
+        self.server_settings = ServerConfigurator("Server", QComboBox)
         self.layout.addWidget(self.server_settings)
         self.server_box = MessageBox(self, "Server")
         self.layout.addWidget(self.server_box)
 
-        self.client_settings = SocketConfigurator("Client")
+        self.client_settings = ServerConfigurator("Client")
         self.layout.addWidget(self.client_settings)
         self.client_box = MessageBox(self, "Client")
         self.layout.addWidget(self.client_box)
@@ -101,28 +102,32 @@ class Window(QMainWindow):
     def create_server(self):
         self.server = Server(
             self.server_settings.ip, self.server_settings.port,
-            self.server_message
+            self.server_message_signal
         )
         self.set_agnostic()
         self.server_box.connect(self.server)
         if self.name and not self.agnostic:
             self.server.name = self.name
         self.server.run()
-        self.server_message.connect(self.server_box.update_text)
+        self.server_message_signal.connect(self.server_box.update_text)
         self.server_box.user_text_message_box.setEnabled(True)  # open text box even
         # if no one is listening, the sending will fail anyway
 
     def create_client(self):
         self.client = Client(
             self.client_settings.ip, self.client_settings.port,
-            self.client_message
+            self.client_message_signal
         )
         self.set_agnostic()
-        self.client_box.connect(self.client)
         if self.name and not self.agnostic:
             self.client.name = self.name
-        self.client_message.connect(self.client_box.update_text)
-        self.client.connect()
+        try:
+            self.client.connect()
+        except (socket.timeout, ConnectionError):
+            del self.client
+            return
+        self.client_box.connect(self.client)
+        self.client_message_signal.connect(self.client_box.update_text)
         self.client.run()
         self.client_box.user_text_message_box.setEnabled(self.client.connected)
         # only open the  text box if the client is connected to a server

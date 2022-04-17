@@ -10,7 +10,7 @@ class Client(Messenger):
         self.connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.connection.settimeout(2)
 
-    def connect(self):
+    def connect(self, propagate=False):
         if self.address == (None, None):
             log.error(f"[{self}] No address used")
         try:
@@ -25,6 +25,8 @@ class Client(Messenger):
                 )
         except (ConnectionRefusedError, socket.timeout):
             log.warning("Could not reach host")
+            if propagate:
+                raise
 
     def _run(self):
         while self.connected:
